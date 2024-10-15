@@ -1,0 +1,14 @@
+---
+- name: Log directory for haproxy does exist
+  ansible.builtin.file:
+    path: "{{ haproxy_log_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy rsyslog configuration for HAproxy
+  notify: Restart rsyslog
+  ansible.builtin.template:
+    src: rsyslog.haproxy.conf.j2
+    dest: "{{ haproxy_rsyslog_conf }}"
+    validate: "rsyslogd -N1 -f %s"
+    mode: "0644"

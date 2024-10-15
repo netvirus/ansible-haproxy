@@ -1,0 +1,93 @@
+---
+# Specifies the version of RKE2 to be installed.
+rke2_version: v1.30.5+rke2r1
+
+# Deploy the control plane in HA mode
+rke2_ha_mode: false
+
+# Install and configure Keepalived on Server nodes
+# Can be disabled if you are using pre-configured Load Balancer
+rke2_ha_mode_keepalived: false
+
+# Sets Cilium as the Container Network Interface (CNI) for the cluster.
+rke2_cni: cilium
+
+# LB IP address for the RKE2 API server.
+rke2_api_ip: 10.10.1.200
+
+# Indicates that the control plane nodes should not schedule regular workloads.
+rke2_controlplane_workload: false
+
+# Disables the cloud controller manager in the RKE2 server options.
+rke2_server_options:
+  - "disable-cloud-controller: true"
+
+# Custom Kubernetes manifests to be applied during cluster setup.
+rke2_custom_manifests:
+  - rke2-vsphere-cpi-csi-sc.yaml
+  - rke2-core-dns-config.yaml
+  - ingress-controller.yaml
+  - rke2-cilium-config.yaml
+  - rke2-vector.yaml
+
+# Specifies whether to download the kubeconfig file after the cluster is set up.
+rke2_download_kubeconf: true
+
+# Names the downloaded kubeconfig file.
+rke2_download_kubeconf_file_name: k8s_workload_prod.yaml
+
+# Defines the path where the kubeconfig file will be downloaded.
+rke2_download_kubeconf_path: ./
+
+# Adds additional Subject Alternative Names (SANs) for the API server's certificate.
+rke2_additional_sans:
+  - "api-rke-prod.b2serv.local"
+
+# Enables air-gap mode for the RKE2 installation, meaning no direct internet access is required.
+rke2_airgap_mode: true
+
+# Specifies the load balancer server port for the RKE2 API server.
+rke2_lb_server_port: 6443
+
+# URL to the repository containing RKE2 artifacts for the installation.
+rke2_artifact_url: https://nexus.b2serv.local/repository/rke2_releases_proxy
+
+# URL to the repository containing RKE2 install script
+rke2_install_bash_url: https://nexus.b2serv.local/repository/raw_rke2_io/
+
+# Token used for authenticating servers in the RKE2 cluster.
+rke2_token: d2ABWWD6EgPyrwFwc3sDeQvaFeGKeFQ8wpWPubNijPNnUVwbPotdZGcPDSz2CrbugbFJCMUqkSFrvN3JUrRmb3FfJEmYAsuyGusw
+
+# Custom registry mirrors to be used for pulling container images.
+# The `rewrite` rule changes image paths to point to a different location within the registry.
+rke2_custom_registry_mirrors:
+  - name: "docker.io"
+    endpoint: ["https://harbor.b2serv.local"]
+    rewrite: '"^rancher/(.*)": "dhpc/rancher/$1"'
+
+# Custom registry configurations, including TLS settings to skip verification.
+rke2_custom_registry_configs:
+  - endpoint: "harbor.b2serv.local"
+    config:
+      tls:
+        insecure_skip_verify: true
+
+# Do not deploy packaged components and delete any deployed components
+# Valid items: rke2-canal, rke2-coredns, rke2-ingress-nginx, rke2-metrics-server
+#rke2_disable: rke2-canal
+
+# Option to disable kube-proxy
+disable_kube_proxy: true
+
+################################
+# Variables for custom manifest
+################################
+# rke2-rancher-install.yaml
+rke2_rancher_hostname: "rancher.b2serv.local"
+rke2_environment: "prod"
+rke2_rancher_bootstrap_password: "gJ2zK5#8vFq@pLp9"
+
+# rke2-vector.yaml
+rke2_vector_helm_version: "0.36.1"
+rke2_vector_cluster_tag: "rke-prod"
+rke2_vector_logstash_url: "https://elk-hec.b2serv.local"

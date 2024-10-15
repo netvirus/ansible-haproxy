@@ -1,0 +1,20 @@
+- name: Create systemd override conf
+  ansible.builtin.file:
+    path: "{{ haproxy_systemd_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy systemd override config file
+  ansible.builtin.template:
+    src: override.conf.j2
+    dest: "{{ haproxy_systemd_path }}/override.conf"
+    mode: "0660"
+  register: result
+  when: >
+    ( haproxy_systemd_override_service is defined ) or
+    ( haproxy_systemd_override_unit is defined ) or
+    ( haproxy_systemd_override_install is defined )
+
+- name: Reload systemd if result is changed
+  ansible.builtin.systemd:
+    daemon_reload: true

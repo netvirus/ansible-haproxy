@@ -1,0 +1,6 @@
+---
+- name: Copy logrotate configuration for HAproxy
+  ansible.builtin.template:
+    src: logrotate.haproxy.j2
+    dest: "/etc/logrotate.d/{{ haproxy_service_name }}"
+    mode: '0644'

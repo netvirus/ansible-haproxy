@@ -1,0 +1,18 @@
+---
+- name: Create cert path directory
+  ansible.builtin.file:
+    path: "{{ haproxy_cert_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy certificate wildcard domain home.local
+  ansible.builtin.copy:
+    backup: true
+    force: true
+    src: "{{ item }}"
+    dest: "{{ haproxy_cert_path }}/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - wildcard_home.local.pem

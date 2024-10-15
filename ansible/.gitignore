@@ -1,0 +1,15 @@
+# IDE directories
+.idea
+.vscode
+
+# misc
+logs*
+
+# roles
+**/test_role
+
+# molecule
+**__pycache__/
+**venv/
+**/molecule/**/tests/**
+

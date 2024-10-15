@@ -1,0 +1,59 @@
+---
+# Specifies the version of RKE2 to be installed.
+rke2_version: v1.30.5+rke2r1
+
+rke2_servers_group_name: masters
+
+# Sets Cilium as the Container Network Interface (CNI) for the cluster.
+rke2_cni: cilium
+
+# Defines the IP address for the RKE2 API server.
+rke2_api_ip: 10.10.1.200
+
+# Indicates that the control plane nodes should not schedule regular workloads.
+rke2_controlplane_workload: true
+
+# Specifies whether to download the kubeconfig file after the cluster is set up.
+rke2_download_kubeconf: true
+
+# Names the downloaded kubeconfig file.
+rke2_download_kubeconf_file_name: k8s_rancher_prod.yaml
+
+# Defines the path where the kubeconfig file will be downloaded.
+rke2_download_kubeconf_path: ./
+
+# Adds additional Subject Alternative Names (SANs) for the API server's certificate.
+rke2_additional_sans:
+  - "api-rke-rnch.b2serv.local"
+
+# Enables air-gap mode for the RKE2 installation, meaning no direct internet access is required.
+rke2_airgap_mode: true
+
+# Specifies the load balancer server port for the RKE2 API server.
+rke2_lb_server_port: 6444
+
+# URL to the repository containing RKE2 artifacts for the installation.
+rke2_artifact_url: https://nexus.b2serv.local/repository/rke2_releases_proxy
+
+# URL to the repository containing RKE2 install script
+rke2_install_bash_url: https://nexus.b2serv.local/repository/raw_rke2_io/
+
+# Token used for authenticating servers in the RKE2 cluster.
+rke2_token: USBs6bGUkMPjKyDvbXJVCRu77PxpP4WEumfWHLsVYjU6wGZ5gaaYoDs9FaGZiPGm7UxSKMv6sJbEfzVUtmKuahRyqECCxz5pDxuv
+
+# Custom registry mirrors to be used for pulling container images.
+# The `rewrite` rule changes image paths to point to a different location within the registry.
+rke2_custom_registry_mirrors:
+  - name: "docker.io"
+    endpoint: ["https://harbor.b2serv.local"]
+    rewrite: '"^rancher/(.*)": "dhpc/rancher/$1"'
+
+# Custom registry configurations, including TLS settings to skip verification.
+rke2_custom_registry_configs:
+  - endpoint: "harbor.b2serv.local"
+    config:
+      tls:
+        insecure_skip_verify: true
+
+# Option to disable kube-proxy
+disable_kube_proxy: false

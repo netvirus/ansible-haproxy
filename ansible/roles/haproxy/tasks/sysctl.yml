@@ -1,0 +1,8 @@
+- name: Haproxy sysctl tuning
+  loop: "{{ haproxy_sysctl }}"
+  when: item.key is defined and item.value is defined
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: '{{ item.value }}'
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/haproxy.conf

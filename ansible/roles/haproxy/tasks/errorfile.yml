@@ -1,0 +1,25 @@
+---
+- name: Create errorfile path directory
+  with_items: "{{ haproxy_errorfile }}"
+  when:
+    - item.name is defined
+    - item.content is defined
+  no_log: true
+  ansible.builtin.file:
+    path: "{{ haproxy_errorfile_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy errorfile file
+  loop: "{{ haproxy_errorfile | default([]) }}"
+  when:
+    - item.name is defined
+    - item.content is defined
+  notify: "restart haproxy"
+  no_log: true
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ haproxy_errorfile_path }}/{{ item.name }}.http"
+    owner: root
+    group: root
+    mode: "0644"

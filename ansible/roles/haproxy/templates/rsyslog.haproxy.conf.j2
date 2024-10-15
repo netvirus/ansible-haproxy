@@ -1,0 +1,19 @@
+{% if haproxy_rsyslog_type == 'socket' %}
+$ModLoad imuxsock
+$AddUnixListenSocket {{ haproxy_socket_logs }}
+{% endif %}
+{% if haproxy_rsyslog_type == 'udp' %}
+$ModLoad imudp
+$UDPServerRun 514
+{% endif %}
+
+$template Haproxy,"%msg%\n"
+$template Time_Haproxy,"%timegenerated%%msg%\n"
+
+# keep logs in localhost
+{{ haproxy_log_facility }}.=info @monitor
+{{ haproxy_log_facility }}.=info -{{ haproxy_log_path }}/access.log;Haproxy
+{{ haproxy_log_facility }}.notice -{{ haproxy_log_path }}/status.log;Time_Haproxy
+{{ haproxy_log_facility }}.error -{{ haproxy_log_path }}/error.log;Time_Haproxy
+# don't log anywhere else
+{{ haproxy_log_facility }}.* ~

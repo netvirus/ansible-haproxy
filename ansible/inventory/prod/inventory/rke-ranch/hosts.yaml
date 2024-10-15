@@ -1,0 +1,18 @@
+all:
+  hosts:
+    rke-ranch-01-p:
+      ansible_host: 10.10.14.10
+    rke-ranch-02-p:
+      ansible_host: 10.10.14.11
+    rke-ranch-03-p:
+      ansible_host: 10.10.14.12
+  children:
+    masters:
+      hosts:
+        rke-ranch-01-p:
+        rke-ranch-02-p:
+        rke-ranch-03-p:
+
+    k8s_cluster:
+      children:
+        masters:

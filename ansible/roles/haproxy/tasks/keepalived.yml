@@ -1,0 +1,82 @@
+---
+- name: Check keepalived_virtual_ip var
+  failed_when: keepalived_virtual_ip is not defined
+  ansible.builtin.fail:
+    msg: "keepalived_virtual_ip is not defined in any vars. Must be set explicitly."
+
+- name: Check vrrp_password var
+  failed_when: vrrp_password is not defined
+  ansible.builtin.fail:
+    msg: "vrrp_password is not defined in any vars. Must be set explicitly."
+
+- name: Set fact about IP addresses
+  ansible.builtin.set_fact:
+    haproxy_all_hosts_ips: "{{ ansible_play_batch | map('extract', hostvars, ['ansible_facts', 'default_ipv4', 'address']) | list }}"
+    haproxy_ip_addr: "{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}"
+    haproxy_ip_interface: "{{ ansible_default_ipv4.interface }}"
+
+- name: Set fact about IP address index in list of all IPs
+  ansible.builtin.set_fact:
+    haproxy_ip_index: "{{ haproxy_all_hosts_ips.index(haproxy_ip_addr) }}"
+
+- name: Ensure keepalived directory exists
+  ansible.builtin.file:
+    dest: "{{ keepalived_conf_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure keepalived is installed
+  ansible.builtin.package:
+    name: keepalived
+    state: present
+
+- name: Template keepalived config
+  notify: Restart keepalived
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: "{{ keepalived_conf_path }}/{{ keepalived_conf_name }}"
+    mode: "0644"
+
+- name: Check netplan configuration presence
+  register: haproxy_netplan_conf
+  ansible.builtin.find:
+    path: /etc/netplan
+    patterns: '*.ya?ml'
+
+- name: Checking systemd-networkd service status
+  register: haproxy_networkd_status
+  ansible.builtin.systemd:
+    service: systemd-networkd
+
+- name: If only 1 file of netplan configuration exists
+  when: >
+    (haproxy_netplan_conf.matched == 1) and
+    (haproxy_networkd_status.status.ActiveState == "active")
+  block:
+    - name: Get netplan content
+      register: haproxy_netplan_conf_slurp
+      ansible.builtin.slurp:
+        src: "{{ haproxy_netplan_conf[0].path }}"
+
+    - name: Forming correct indentation for yaml file
+      ansible.builtin.set_fact:
+        haproxy_yaml_indent: "{{ haproxy_netplan_conf_slurp['content'] | b64decode | regex_findall('^(\\s+)' + haproxy_ip_interface + '.*', '\\1') | first }}"
+        haproxy_if_changed_netplan: "{{ haproxy_netplan_conf_slurp['content'] | b64decode | regex_findall('^\\s+(critical).*', '\\1') | first }}"
+
+    - name: Change netplan config
+      when: haproxy_if_changed_netplan == ""
+      ansible.builtin.lineinfile:
+        path: "{{ haproxy_netplan_conf[0].path }}"
+        insertafter: "^\\s+{{ haproxy_ip_interface }}.*"
+        line: "{{ haproxy_yaml_indent }}  critical: true"
+        state: present
+
+    - name: Apply netplan config
+      when: haproxy_if_changed_netplan == ""
+      ansible.builtin.shell:
+        cmd: netplan apply
+
+  rescue:
+    - name: Debug
+      ansible.builtin.debug:
+        msg: "Something went wrong! Ending play normally."

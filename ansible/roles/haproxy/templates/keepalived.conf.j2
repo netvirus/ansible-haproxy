@@ -1,0 +1,39 @@
+vrrp_script chk_haproxy {
+    script "/usr/bin/killall -0 haproxy"
+    interval 2
+    weight 2
+}
+
+vrrp_instance LB_VRRP {
+    interface {{ haproxy_ip_interface }}
+    {% if keepalived_role is defined -%}
+    state {{ keepalived_role }}
+    {% elif haproxy_ip_index | int == 0 -%}
+    state MASTER
+    {% else -%}
+    state BACKUP
+    {% endif -%}
+    priority {{ 101 - haproxy_ip_index | int }}
+    virtual_router_id 51
+    smtp_alert
+    authentication {
+        auth_type AH
+        auth_pass {{ vrrp_password }}
+    }
+    unicast_src_ip {{ haproxy_ip_addr }}
+    {% set others_ips = haproxy_all_hosts_ips | difference([haproxy_ip_addr]) -%}
+    unicast_peer {
+    {% for peer in others_ips %}
+    {{ peer }}
+    {% endfor -%}
+    }
+        {# {{ haproxy_all_hosts_ips | difference([haproxy_ip_addr]) | first }} #}
+
+    virtual_ipaddress {
+        {{ keepalived_virtual_ip }}
+    }
+
+    track_script {
+        chk_haproxy
+    }
+}

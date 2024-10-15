@@ -1,0 +1,20 @@
+{% if haproxy_systemd_override_service is defined %}
+[Service]
+{% for item in haproxy_systemd_override_service %}
+{{ item.key }}={{ item.value }}
+{% endfor %}
+{% endif %}
+
+{% if haproxy_systemd_override_unit is defined %}
+[Unit]
+{% for item in haproxy_systemd_override_unit %}
+{{ item.key }}={{ item.value }}
+{% endfor %}
+{% endif %}
+
+{% if haproxy_systemd_override_install is defined %}
+[Install]
+{% for item in haproxy_systemd_override_install %}
+{{ item.key }}={{ item.value }}
+{% endfor %}
+{% endif %}
